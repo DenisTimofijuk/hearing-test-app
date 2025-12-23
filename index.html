@@ -1,13 +1,245 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>hearing-test-app</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>hearing-test-app</title>
+    </head>
+    <body>
+        <div id="app">
+            <div
+                class="min-h-screen bg-gray-100 flex items-center justify-center p-4"
+            >
+                <div
+                    class="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-6 space-y-8"
+                >
+                    <!-- Header -->
+                    <header class="text-center space-y-2">
+                        <h1 class="text-2xl font-semibold">Hearing Test</h1>
+                        <p class="text-gray-600 text-sm">
+                            Test your hearing sensitivity separately for each
+                            ear.
+                        </p>
+                    </header>
+
+                    <!-- Test Controls -->
+                    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Ear Selection -->
+                        <div class="flex flex-col gap-2">
+                            <span class="text-sm font-medium text-gray-700"
+                                >Select ear</span
+                            >
+                            <div class="flex gap-2">
+                                <button
+                                    id="ear-left"
+                                    class="flex-1 px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100"
+                                >
+                                    Left Ear
+                                </button>
+                                <button
+                                    id="ear-right"
+                                    class="flex-1 px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100"
+                                >
+                                    Right Ear
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Test Status -->
+                        <div
+                            class="flex flex-col items-center justify-center gap-1 text-center"
+                        >
+                            <span class="text-sm text-gray-500"
+                                >Current frequency</span
+                            >
+                            <span
+                                id="current-frequency"
+                                class="text-xl font-semibold"
+                            >
+                                — Hz
+                            </span>
+                        </div>
+
+                        <!-- Start / Action -->
+                        <div class="flex flex-col gap-2">
+                            <span class="text-sm font-medium text-gray-700"
+                                >Test control</span
+                            >
+                            <button
+                                id="start-test"
+                                class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                            >
+                                Start Test
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Hearing Response -->
+                    <section
+                        class="border-t pt-6 flex flex-col items-center gap-4"
+                    >
+                        <p class="text-gray-600 text-sm">
+                            Click as soon as you hear the tone
+                        </p>
+
+                        <button
+                            id="heard-tone"
+                            class="px-8 py-4 rounded-xl bg-green-600 text-white text-lg font-medium hover:bg-green-700 disabled:opacity-50"
+                            disabled
+                        >
+                            I Hear It
+                        </button>
+                    </section>
+
+                    <!-- Progress -->
+                    <section class="space-y-2">
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <span>Test progress</span>
+                            <span id="progress-text">0 / 0</span>
+                        </div>
+                        <div
+                            class="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
+                        >
+                            <div
+                                id="progress-bar"
+                                class="h-full w-0 bg-blue-600 transition-all"
+                            ></div>
+                        </div>
+                    </section>
+
+                    <!-- Results -->
+                    <section class="border-t pt-6 space-y-4">
+                        <h2 class="text-lg font-semibold text-center">
+                            Results
+                        </h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Left Ear Chart -->
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <h3 class="text-sm font-medium mb-2">
+                                    Left Ear
+                                </h3>
+                                <div
+                                    id="chart-left"
+                                    class="h-64 flex items-center justify-center text-gray-400 text-sm border border-dashed rounded-lg"
+                                >
+                                    Chart placeholder
+                                </div>
+                            </div>
+
+                            <!-- Right Ear Chart -->
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <h3 class="text-sm font-medium mb-2">
+                                    Right Ear
+                                </h3>
+                                <div
+                                    id="chart-right"
+                                    class="h-64 flex items-center justify-center text-gray-400 text-sm border border-dashed rounded-lg"
+                                >
+                                    Chart placeholder
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Disclaimer -->
+                    <section
+                        class="border-t pt-6 text-left text-sm text-gray-500"
+                    >
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">
+                            Hearing Test (Experimental)
+                        </h3>
+
+                        <p class="mb-4 text-gray-600">
+                            This is a
+                            <strong>simple, experimental hearing test</strong>
+                            that plays pure tones across a wide frequency range.
+                            For each tone, the volume slowly increases from
+                            silence. Click <strong>"I hear it"</strong> as soon
+                            as you can perceive the sound, and the test will
+                            move to the next frequency.
+                        </p>
+
+                        <div class="mb-4">
+                            <h4 class="font-semibold text-gray-700 mb-2">
+                                How to use
+                            </h4>
+                            <ul
+                                class="space-y-1 text-gray-600"
+                            >
+                                <li>
+                                    • Use <strong>headphones</strong> (strongly
+                                    recommended)
+                                </li>
+                                <li>
+                                    • Sit in a
+                                    <strong>quiet environment</strong>
+                                </li>
+                                <li>
+                                    • Start at a
+                                    <strong>comfortable system volume</strong>
+                                    (do not use maximum volume)
+                                </li>
+                                <li>
+                                    • Respond as soon as you hear the tone, not
+                                    when it becomes loud
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <h4 class="font-semibold text-gray-700 mb-2">
+                                Important disclaimer
+                            </h4>
+                            <ul
+                                class="space-y-1 text-gray-600"
+                            >
+                                <li>
+                                    • This is
+                                    <strong
+                                        >not a medical or diagnostic
+                                        tool</strong
+                                    >
+                                </li>
+                                <li>
+                                    • Results can be
+                                    <strong>misleading</strong> due to many
+                                    variables, including:
+                                    <ul class="ml-6 mt-1 space-y-1">
+                                        <li>◦ Headphones or speakers</li>
+                                        <li>◦ Sound card / DAC</li>
+                                        <li>◦ Browser and operating system</li>
+                                        <li>◦ Ambient noise</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    • Results
+                                    <strong
+                                        >cannot be compared between different
+                                        people</strong
+                                    >
+                                    if different hardware is used
+                                </li>
+                                <li>
+                                    • The test is intended only for
+                                    <strong
+                                        >basic, personal experimentation</strong
+                                    >, such as comparing
+                                    <strong>left vs. right ear</strong> on the
+                                    same setup
+                                </li>
+                            </ul>
+                        </div>
+
+                        <p class="text-gray-600">
+                            If you have concerns about your hearing, consult a
+                            qualified hearing professional.
+                        </p>
+                    </section>
+                </div>
+            </div>
+        </div>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
 </html>

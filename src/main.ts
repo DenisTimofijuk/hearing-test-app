@@ -1,24 +1,38 @@
 import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import { HearingTestController } from './HearingTestController';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+const buttonEarLeft = document.getElementById('ear-left')!;
+const buttonEarRight = document.getElementById('ear-right')!;
+const buttonStartTest = document.getElementById('start-test')!;
+const butonHeardTone = document.getElementById('heard-tone')!;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+const placeHolderChartLeft = document.getElementById('chart-left')!;
+const placeHolderChartRight = document.getElementById('chart-right')!;
+
+const currentFrequencyText = document.getElementById('current-frequency')!;
+
+const progressText = document.getElementById('progress-text')!;
+const progressBar = document.getElementById('progress-bar')!;
+
+const test = new HearingTestController({
+  stepsPerOctave: 6,
+  rampDuration: 4,
+  stepTimeout: 8000
+});
+
+buttonStartTest.addEventListener('click', ()=>{
+    butonHeardTone.removeAttribute('disabled');
+    test.start();
+})
+
+
+const totalSteps = test.frequencies.length;
+let index=0;
+butonHeardTone.addEventListener('click', ()=>{
+    progressBar.classList.remove(`w-0`);
+    index++;
+    const currentProgress = Math.round(index * 100 / totalSteps);
+    progressBar.style.width = `${currentProgress}%`;
+    progressText.textContent = `${index} / ${totalSteps}`;
+    test.heard();
+})
