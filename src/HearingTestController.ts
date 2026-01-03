@@ -20,12 +20,14 @@ export class HearingTestController {
     ear: Ear;
     mode: "fixed" | "staircase";
     activeStaircase: Staircase | null;
+    rampPower: number;
     constructor({
         frequencies,
         rampDuration = 2,
         maxGain = 0.7,
         stepTimeout = 3500,
         mode = "fixed",
+        rampPower = 3.0,
     }: HearingTestControllerProps) {
         this.generator = new ToneGenerator();
         this.frequencies =
@@ -44,6 +46,7 @@ export class HearingTestController {
         this.results = [];
         this.timeoutId = null;
         this.ear = "left";
+        this.rampPower = rampPower;
     }
 
     setEar(ear: Ear) {
@@ -83,6 +86,7 @@ export class HearingTestController {
             rampIn: this.rampDuration,
             maxGain: trialGain,
             ear: this.ear,
+            rampPower: this.rampPower,
         });
 
         this.nextEventCustomHandler();

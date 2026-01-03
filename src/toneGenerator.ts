@@ -32,11 +32,15 @@ export class ToneGenerator {
         frequency,
         rampIn = 3.0,
         maxGain = 0.7,
+        // Expose rampPower so callers can make the slow-start shallower
+        // (larger power -> slower initial increase). Default is cubic.
+        rampPower = 3.0,
         ear = "left", // 'left' | 'right'
     }:{
         frequency: number;
         rampIn?: number;
         maxGain?: number;
+        rampPower?: number;
         ear?: Ear;
     }) {
         this.stopImmediate();
@@ -54,9 +58,24 @@ export class ToneGenerator {
         this.oscillator.type = "sine";
         this.oscillator.frequency.setValueAtTime(frequency, now);
 
-        // Fade in (no click) — use linear ramp from 0 to avoid exponential edge cases
-        this.gainNode.gain.setValueAtTime(0, now);
-        this.gainNode.gain.linearRampToValueAtTime(maxGain, now + rampIn);
+        // Fade in (no click) — use a perceptual (slow-start) curve so
+        // users have time to react before the sound becomes loud.
+        if (rampIn <= 0) {
+            this.gainNode.gain.setValueAtTime(maxGain, now);
+        } else {
+            // Build a smooth curve that starts very slowly and accelerates
+            // (cubic easing). Using setValueCurveAtTime gives better control
+            // over the perceived loudness ramp than a linear ramp.
+            const curveLen = 128;
+            const curve = new Float32Array(curveLen);
+            for (let i = 0; i < curveLen; i++) {
+                const t = i / (curveLen - 1);
+                curve[i] = maxGain * Math.pow(t, rampPower);
+            }
+
+            this.gainNode.gain.setValueAtTime(0, now);
+            this.gainNode.gain.setValueCurveAtTime(curve, now, rampIn);
+        }
 
         this.oscillator.connect(this.gainNode);
 

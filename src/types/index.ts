@@ -6,4 +6,5 @@ export type HearingTestControllerProps = {
     maxGain?: number, 
     stepTimeout?: number; 
     mode?: "fixed" | "staircase";
+    rampPower?: number;
 }

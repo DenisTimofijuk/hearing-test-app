@@ -1,6 +1,7 @@
 import "./style.css";
 import { HearingTestController } from "./HearingTestController";
 import { initCharts, updateChartsFromMeasured, calculateHearingSummary } from "./charts";
+import { EXTENDED_TEST_FREQUENCIES } from "./frequencies";
 
 const buttonEarLeft = document.getElementById("ear-left")!;
 const buttonEarRight = document.getElementById("ear-right")!;
@@ -12,7 +13,12 @@ const currentFrequencyText = document.getElementById("current-frequency")!;
 const progressText = document.getElementById("progress-text")!;
 const progressBar = document.getElementById("progress-bar")!;
 
-const test = new HearingTestController({});
+const test = new HearingTestController({
+  rampPower: 10.0,
+  rampDuration: 5.0,
+  stepTimeout: 5000,
+  frequencies: EXTENDED_TEST_FREQUENCIES
+});
 
 const totalSteps = test.frequencies.length;
 progressText.textContent = `${test.index} / ${totalSteps}`;
@@ -91,6 +97,26 @@ buttonStartTest.addEventListener("click", () => {
 butonHeardTone.addEventListener("click", () => {
     progressBar.classList.remove(`w-0`); //TODO: remove this.
     test.heard();
+});
+
+// trigger "heard" action with Spacebar (unless user is typing in a field)
+window.addEventListener("keydown", (e: KeyboardEvent) => {
+  const active = document.activeElement as HTMLElement | null;
+  const typing =
+    !!active &&
+    (active.tagName === "INPUT" ||
+      active.tagName === "TEXTAREA" ||
+      active.isContentEditable);
+  if (typing) return;
+
+  const isSpace = e.code === "Space" || e.key === " " || e.key === "Spacebar";
+  if (!isSpace) return;
+
+  e.preventDefault();
+  if (test.isFinished()) return;
+
+  progressBar.classList.remove(`w-0`); //TODO: remove this.
+  test.heard();
 });
 
 function setProgress() {
