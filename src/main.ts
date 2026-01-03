@@ -14,18 +14,14 @@ const currentFrequencyText = document.getElementById("current-frequency")!;
 const progressText = document.getElementById("progress-text")!;
 const progressBar = document.getElementById("progress-bar")!;
 
-const test = new HearingTestController({
-    stepsPerOctave: 6,
-    rampDuration: 4,
-    stepTimeout: 8000,
-});
+const test = new HearingTestController({});
 
 const totalSteps = test.frequencies.length;
 progressText.textContent = `${test.index} / ${totalSteps}`;
 
 test.nextEventCustomHandler = () => {
   setProgress();
-  currentFrequencyText.textContent = `${test.getCurrentFrequence()} Hz`;
+  currentFrequencyText.textContent = `${test.getCurrentFrequency()} Hz`;
 }
 
 buttonStartTest.addEventListener("click", () => {

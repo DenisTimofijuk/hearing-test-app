@@ -54,9 +54,9 @@ export class ToneGenerator {
         this.oscillator.type = "sine";
         this.oscillator.frequency.setValueAtTime(frequency, now);
 
-        // Fade in (no click)
-        this.gainNode.gain.setValueAtTime(0.0001, now);
-        this.gainNode.gain.exponentialRampToValueAtTime(maxGain, now + rampIn);
+        // Fade in (no click) — use linear ramp from 0 to avoid exponential edge cases
+        this.gainNode.gain.setValueAtTime(0, now);
+        this.gainNode.gain.linearRampToValueAtTime(maxGain, now + rampIn);
 
         this.oscillator.connect(this.gainNode);
 
@@ -84,16 +84,26 @@ export class ToneGenerator {
             throw Error('Audio Gain Node is not available.')
         }
 
-        // Fade out BEFORE stopping
-        this.gainNode.gain.cancelScheduledValues(now);
-        this.gainNode.gain.setValueAtTime(
-            Math.max(this.gainNode.gain.value, 0.0001),
-            now
-        );
-        this.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + rampOut);
+        // Fade out BEFORE stopping — schedule a smooth linear ramp to 0
+        try {
+            this.gainNode.gain.cancelScheduledValues(now);
+        } catch {}
 
-        this.oscillator.stop(now + rampOut + 0.01);
-        this.oscillator.onended = () => this.stopImmediate();
+        // Ensure the AudioParam has the current value as the starting point
+        const current = this.gainNode.gain.value ?? 0;
+        this.gainNode.gain.setValueAtTime(current, now);
+        this.gainNode.gain.linearRampToValueAtTime(0, now + rampOut);
+
+        const stoppingOsc = this.oscillator;
+        if (stoppingOsc) {
+            stoppingOsc.stop(now + rampOut + 0.02);
+            stoppingOsc.onended = () => {
+                // Only perform immediate cleanup if this oscillator is still the active one
+                if (this.oscillator === stoppingOsc) {
+                    this.stopImmediate();
+                }
+            };
+        }
     }
 
     stopImmediate() {
