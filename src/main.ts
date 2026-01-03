@@ -24,6 +24,25 @@ test.nextEventCustomHandler = () => {
   currentFrequencyText.textContent = `${test.getCurrentFrequency()} Hz`;
 }
 
+test.testFinishedCustomHandler = () => {
+    placeHolderChartLeft.textContent = "Left ear chart would be rendered here.";
+    placeHolderChartRight.textContent = "Right ear chart would be rendered here.";
+    butonHeardTone.setAttribute("disabled", "true");
+    currentFrequencyText.textContent = '— Hz';
+}
+
+buttonEarLeft.addEventListener("click", () => {
+    buttonEarLeft.classList.add("selected");
+    buttonEarRight.classList.remove("selected");
+    test.setEar("left");
+});
+
+buttonEarRight.addEventListener("click", () => {
+    buttonEarRight.classList.add("selected");
+    buttonEarLeft.classList.remove("selected");
+    test.setEar("right");
+});
+
 buttonStartTest.addEventListener("click", () => {
     butonHeardTone.removeAttribute("disabled");
     test.start();
@@ -32,11 +51,6 @@ buttonStartTest.addEventListener("click", () => {
 butonHeardTone.addEventListener("click", () => {
     progressBar.classList.remove(`w-0`); //TODO: remove this.
     test.heard();
-
-    if (test.isFinished()) {
-        butonHeardTone.setAttribute("disabled", "true");
-        currentFrequencyText.textContent = '- Hz';
-    }
 });
 
 function setProgress() {

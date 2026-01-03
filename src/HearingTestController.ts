@@ -46,6 +46,10 @@ export class HearingTestController {
         this.ear = "left";
     }
 
+    setEar(ear: Ear) {
+        this.ear = ear;
+    }
+
     async start() {
         await this.generator.init();
         this.index = 0;
@@ -148,6 +152,7 @@ export class HearingTestController {
 
     finish() {
         console.log("Test complete", this.results);
+        this.testFinishedCustomHandler();
     }
 
     getCurrentFrequency() {
@@ -156,6 +161,10 @@ export class HearingTestController {
 
     nextEventCustomHandler() {
         console.log("Unhandled event.");
+    }
+
+    testFinishedCustomHandler() {
+        console.log("Test finished.");
     }
 
     // Interpolate results (log-frequency / linear dB interpolation)
