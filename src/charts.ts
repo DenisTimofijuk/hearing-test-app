@@ -3,6 +3,9 @@ import { Chart, registerables } from "chart.js";
 // Register all necessary components of Chart.js
 Chart.register(...registerables);
 
+// Maximum gain used in tone generation - used to normalize hearing thresholds
+const MAX_GAIN = 0.7;
+
 type MeasuredPoint = { frequency: number; gain: number };
 
 let leftChart: any = null;
@@ -29,21 +32,61 @@ function makeChart(ctx: CanvasRenderingContext2D, label: string) {
       maintainAspectRatio: false,
       scales: {
         y: {
-          title: { display: true, text: "dB (20·log10(gain))" },
+          min: 0,
+          max: 60,
+          title: { display: true, text: "Hearing Level (dB HL)" },
+          ticks: {
+            callback: (value) => `${value} dB`,
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          display: true,
+        },
+        filler: {
+          propagate: true,
         },
       },
     },
+    plugins: [
+      {
+        id: "hearingZones",
+        afterDatasetsDraw(chart: any) {
+          const ctx = chart.ctx;
+          const yAxis = chart.scales.y;
+          const xAxis = chart.scales.x;
+
+          const zones = [
+            { min: 0, max: 20, color: "rgba(34, 197, 94, 0.1)", label: "Normal" },
+            { min: 20, max: 40, color: "rgba(234, 179, 8, 0.1)", label: "Mild" },
+            { min: 40, max: 60, color: "rgba(239, 68, 68, 0.1)", label: "Moderate" },
+          ];
+
+          zones.forEach((zone) => {
+            const yStart = yAxis.getPixelForValue(zone.max);
+            const yEnd = yAxis.getPixelForValue(zone.min);
+            ctx.fillStyle = zone.color;
+            ctx.fillRect(xAxis.left, yStart, xAxis.right - xAxis.left, yEnd - yStart);
+          });
+        },
+      },
+    ],
   });
 }
 
 function interpMeasuredToDb(measured: MeasuredPoint[], targetFreqs: number[]) {
   const measuredFiltered = measured
-    .map((m) => ({ f: m.frequency, db: 20 * Math.log10(m.gain) }))
+    .map((m) => {
+      // Map gain (0..MAX_GAIN) to hearing level 0..60 dB HL and clamp
+      const raw = (m.gain / MAX_GAIN) * 60;
+      const db = Math.min(Math.max(raw, 0), 60);
+      return { f: m.frequency, db };
+    })
     .sort((a, b) => a.f - b.f);
 
   if (measuredFiltered.length === 0) {
     return null;
-    // return targetFreqs.map(() => null);
   }
 
   const interp = (f: number) => {
@@ -91,7 +134,7 @@ export function updateChartsFromMeasured(
   const labels = targetFreqs.map((f) => `${f} Hz`);
   const leftData = interpMeasuredToDb(leftMeasured, targetFreqs);
   const rightData = interpMeasuredToDb(rightMeasured, targetFreqs);
-
+  
   if (leftChart && leftData) {
     leftChart.data.labels = labels;
     leftChart.data.datasets[0].data = leftData;
@@ -101,5 +144,52 @@ export function updateChartsFromMeasured(
     rightChart.data.labels = labels;
     rightChart.data.datasets[0].data = rightData;
     rightChart.update();
+  }
+}
+
+export function calculateHearingSummary(measured: MeasuredPoint[]): {
+  category: string;
+  level: "normal" | "mild" | "moderate" | "severe";
+  description: string;
+} {
+  if (measured.length === 0) {
+    return {
+      category: "No data",
+      level: "normal",
+      description: "Unable to determine hearing status",
+    };
+  }
+
+  // Map gains to 0..60 dB HL and clamp values
+  const dbValues = measured.map((m) => {
+    const raw = (m.gain / MAX_GAIN) * 60;
+    return Math.min(Math.max(raw, 0), 60);
+  });
+  const avgDb = dbValues.reduce((a, b) => a + b, 0) / dbValues.length;
+
+  if (avgDb < 20) {
+    return {
+      category: "Normal Hearing",
+      level: "normal",
+      description: "Your hearing is within normal limits",
+    };
+  } else if (avgDb < 40) {
+    return {
+      category: "Mild Hearing Loss",
+      level: "mild",
+      description: "You may have difficulty with soft sounds in noisy environments",
+    };
+  } else if (avgDb < 60) {
+    return {
+      category: "Moderate Hearing Loss",
+      level: "moderate",
+      description: "You may have difficulty with normal conversation",
+    };
+  } else {
+    return {
+      category: "Severe Hearing Loss",
+      level: "severe",
+      description: "Consider consulting an audiologist",
+    };
   }
 }

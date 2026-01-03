@@ -160,49 +160,10 @@ export class HearingTestController {
     }
 
     nextEventCustomHandler() {
-        console.log("Unhandled event.");
+        console.error("Unhandled event.");
     }
 
     testFinishedCustomHandler() {
-        console.log("Test finished.");
-    }
-
-    // Interpolate results (log-frequency / linear dB interpolation)
-    interpolateResults(targetFreqs: number[]) {
-        // build map of measured freq -> dB (from gain)
-        const measured = this.results
-            .filter((r) => r.gain !== null)
-            .map((r) => ({
-                f: r.frequency,
-                db: 20 * Math.log10(r.gain as number),
-            }))
-            .sort((a, b) => a.f - b.f);
-
-        if (measured.length === 0) return [];
-
-        const interp = (f: number) => {
-            if (measured.some((m) => m.f === f)) {
-                return measured.find((m) => m.f === f)!.db;
-            }
-            // find neighbours in log space
-            const logF = Math.log(f);
-            let left = measured[0];
-            let right = measured[measured.length - 1];
-            for (let i = 0; i < measured.length - 1; i++) {
-                const a = measured[i];
-                const b = measured[i + 1];
-                if (Math.log(a.f) <= logF && logF <= Math.log(b.f)) {
-                    left = a;
-                    right = b;
-                    break;
-                }
-            }
-            const t =
-                (Math.log(f) - Math.log(left.f)) /
-                (Math.log(right.f) - Math.log(left.f));
-            return left.db + t * (right.db - left.db);
-        };
-
-        return targetFreqs.map((f) => ({ frequency: f, db: interp(f) }));
+        console.error("Unhandled event.");
     }
 }

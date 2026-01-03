@@ -1,6 +1,6 @@
 import "./style.css";
 import { HearingTestController } from "./HearingTestController";
-import { initCharts, updateChartsFromMeasured } from "./charts";
+import { initCharts, updateChartsFromMeasured, calculateHearingSummary } from "./charts";
 
 const buttonEarLeft = document.getElementById("ear-left")!;
 const buttonEarRight = document.getElementById("ear-right")!;
@@ -24,15 +24,46 @@ test.nextEventCustomHandler = () => {
 
 test.testFinishedCustomHandler = () => {
         // prepare measured points per ear
+        // For frequencies not heard (gain is null), assign a very low gain value (0.001)
+        // which corresponds to severe hearing loss (~60 dB HL)
         const leftMeasured = test.results
-            .filter((r) => r.ear === "left" && r.gain !== null)
-            .map((r) => ({ frequency: r.frequency, gain: r.gain as number }));
+            .filter((r) => r.ear === "left")
+            .map((r) => ({
+                frequency: r.frequency,
+                gain: r.gain || test.maxGain
+            }));
 
         const rightMeasured = test.results
-            .filter((r) => r.ear === "right" && r.gain !== null)
-            .map((r) => ({ frequency: r.frequency, gain: r.gain as number }));
+            .filter((r) => r.ear === "right")
+            .map((r) => ({
+                frequency: r.frequency,
+                gain: r.gain || test.maxGain
+            }));
 
         updateChartsFromMeasured(leftMeasured, rightMeasured, test.frequencies);
+        
+        // Display hearing summaries
+        const leftSummary = calculateHearingSummary(leftMeasured);
+        const rightSummary = calculateHearingSummary(rightMeasured);
+        
+        const resultSection = document.getElementById("result-summary");
+        if (resultSection) {
+          resultSection.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+              <div style="padding: 1rem; background: rgba(37,99,235,0.05); border-radius: 8px;">
+                <h3 style="margin: 0 0 0.5rem 0; color: #1e40af;">Left Ear</h3>
+                <p style="margin: 0 0 0.5rem 0; font-weight: bold; font-size: 1.125rem;">${leftSummary.category}</p>
+                <p style="margin: 0; color: #666; font-size: 0.875rem;">${leftSummary.description}</p>
+              </div>
+              <div style="padding: 1rem; background: rgba(37,99,235,0.05); border-radius: 8px;">
+                <h3 style="margin: 0 0 0.5rem 0; color: #1e40af;">Right Ear</h3>
+                <p style="margin: 0 0 0.5rem 0; font-weight: bold; font-size: 1.125rem;">${rightSummary.category}</p>
+                <p style="margin: 0; color: #666; font-size: 0.875rem;">${rightSummary.description}</p>
+              </div>
+            </div>
+          `;
+        }
+        
         butonHeardTone.setAttribute("disabled", "true");
         currentFrequencyText.textContent = "— Hz";
 }
