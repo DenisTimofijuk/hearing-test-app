@@ -1,5 +1,6 @@
 import { ToneGenerator } from "./toneGenerator";
 import { generateLogFrequencies } from "./frequencies";
+import type { Ear } from "./types";
 
 export class HearingTestController {
     generator: ToneGenerator;
@@ -8,8 +9,9 @@ export class HearingTestController {
     maxGain: number;
     stepTimeout: number;
     index: number;
-    results: { frequency: number; heard: boolean; gain: number | null }[];
+    results: { frequency: number; ear: Ear; heard: boolean; gain: number | null }[];
     timeoutId: number | null;
+    ear: Ear;
     constructor({
         minHz = 20,
         maxHz = 20000,
@@ -32,6 +34,7 @@ export class HearingTestController {
         this.index = 0;
         this.results = [];
         this.timeoutId = null;
+        this.ear = "left";
     }
 
     async start() {
@@ -41,8 +44,12 @@ export class HearingTestController {
         this.next();
     }
 
+    isFinished(){
+        return this.index >= this.frequencies.length;
+    }
+
     next() {
-        if (this.index >= this.frequencies.length) {
+        if (this.isFinished()) {
             this.finish();
             return;
         }
@@ -51,9 +58,12 @@ export class HearingTestController {
 
         this.generator.start({
             frequency: freq,
-            rampDuration: this.rampDuration,
+            rampIn: this.rampDuration,
             maxGain: this.maxGain,
+            ear: this.ear,
         });
+
+        this.nextEventCustomHandler();
 
         this.timeoutId = setTimeout(() => {
             this.record(false);
@@ -69,6 +79,7 @@ export class HearingTestController {
 
         this.results.push({
             frequency: this.frequencies[this.index],
+            ear: this.ear,
             heard,
             gain: heard ? this.generator.getCurrentGain() : null,
         });
@@ -80,5 +91,13 @@ export class HearingTestController {
 
     finish() {
         console.log("Test complete", this.results);
+    }
+
+    getCurrentFrequence(){
+        return this.frequencies[this.index];
+    }
+
+    nextEventCustomHandler(){
+        console.log('Unhandled event.');
     }
 }

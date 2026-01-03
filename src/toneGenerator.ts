@@ -1,3 +1,5 @@
+import type { Ear } from "./types";
+
 declare global {
     interface Window {
         webkitAudioContext: typeof AudioContext;
@@ -5,62 +7,108 @@ declare global {
 }
 
 export class ToneGenerator {
-  audioCtx: AudioContext| null;
-  oscillator: OscillatorNode | null;
-  gainNode: GainNode | null;
-  constructor() {
-    this.audioCtx = null;
-    this.oscillator = null;
-    this.gainNode = null;
-  }
-
-  async init() {
-    if (!this.audioCtx) {
-      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx: AudioContext | null;
+    oscillator: OscillatorNode | null;
+    gainNode: GainNode | null;
+    merger: ChannelMergerNode | null;
+    constructor() {
+        this.audioCtx = null;
+        this.oscillator = null;
+        this.gainNode = null;
+        this.merger = null;
     }
-    if (this.audioCtx.state === 'suspended') {
-      await this.audioCtx.resume();
+
+    async init() {
+        if (!this.audioCtx) {
+            this.audioCtx = new (window.AudioContext ||
+                window.webkitAudioContext)();
+        }
+        if (this.audioCtx.state === "suspended") {
+            await this.audioCtx.resume();
+        }
     }
-  }
 
-  start({ frequency, rampDuration, maxGain }:{frequency:number, rampDuration:number, maxGain:number}) {
-    this.stop();
+    start({
+        frequency,
+        rampIn = 3.0,
+        maxGain = 0.7,
+        ear = "left", // 'left' | 'right'
+    }:{
+        frequency: number;
+        rampIn?: number;
+        maxGain?: number;
+        ear?: Ear;
+    }) {
+        this.stopImmediate();
 
-    const ctx = this.audioCtx;
-    if(!ctx){
-        throw Error('Audio Context is not available.');
+        const ctx = this.audioCtx;
+        if(!ctx){
+            throw Error('Audio Context is not available.')
+        }
+        const now = ctx.currentTime;
+
+        this.oscillator = ctx.createOscillator();
+        this.gainNode = ctx.createGain();
+        this.merger = ctx.createChannelMerger(2);
+
+        this.oscillator.type = "sine";
+        this.oscillator.frequency.setValueAtTime(frequency, now);
+
+        // Fade in (no click)
+        this.gainNode.gain.setValueAtTime(0.0001, now);
+        this.gainNode.gain.exponentialRampToValueAtTime(maxGain, now + rampIn);
+
+        this.oscillator.connect(this.gainNode);
+
+        // Route to only one channel
+        if (ear === "left") {
+            this.gainNode.connect(this.merger, 0, 0);
+        } else {
+            this.gainNode.connect(this.merger, 0, 1);
+        }
+
+        this.merger.connect(ctx.destination);
+        this.oscillator.start(now);
     }
-    const now = ctx.currentTime;
 
-    this.oscillator = ctx.createOscillator();
-    this.gainNode = ctx.createGain();
+    stop(rampOut = 0.05) {
+        if (!this.oscillator) return;
 
-    this.oscillator.type = 'sine';
-    this.oscillator.frequency.setValueAtTime(frequency, now);
+        const ctx = this.audioCtx;
+        if(!ctx){
+            throw Error('Audio Context is not available.')
+        }
+        const now = ctx.currentTime;
 
-    this.gainNode.gain.setValueAtTime(0.0001, now);
-    this.gainNode.gain.exponentialRampToValueAtTime(
-      maxGain,
-      now + rampDuration
-    );
+        if(!this.gainNode){
+            throw Error('Audio Gain Node is not available.')
+        }
 
-    this.oscillator.connect(this.gainNode);
-    this.gainNode.connect(ctx.destination);
+        // Fade out BEFORE stopping
+        this.gainNode.gain.cancelScheduledValues(now);
+        this.gainNode.gain.setValueAtTime(
+            Math.max(this.gainNode.gain.value, 0.0001),
+            now
+        );
+        this.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + rampOut);
 
-    this.oscillator.start();
-  }
-
-  stop() {
-    if (this.oscillator) {
-      this.oscillator.stop();
-      this.oscillator.disconnect();
-      this.gainNode?.disconnect();
-      this.oscillator = null;
-      this.gainNode = null;
+        this.oscillator.stop(now + rampOut + 0.01);
+        this.oscillator.onended = () => this.stopImmediate();
     }
-  }
 
-  getCurrentGain() {
-    return this.gainNode?.gain.value ?? 0;
-  }
+    stopImmediate() {
+        try {
+            this.oscillator?.disconnect();
+            this.gainNode?.disconnect();
+            this.merger?.disconnect();
+        } catch {}
+
+        this.oscillator = null;
+        this.gainNode = null;
+        this.merger = null;
+    }
+
+    getCurrentGain() {
+        return this.gainNode?.gain.value ?? 0;
+    }
 }
