@@ -1,6 +1,7 @@
 import "./style.css";
 import { HearingTestController } from "./HearingTestController";
-import { initCharts, updateChartsFromMeasured, calculateHearingSummary } from "./charts";
+import { initCharts, updateChartsFromMeasured } from "./charts";
+import type { HearingResult } from "./types";
 import { EXTENDED_TEST_FREQUENCIES } from "./frequencies";
 
 const buttonEarLeft = document.getElementById("ear-left")!;
@@ -13,69 +14,74 @@ const currentFrequencyText = document.getElementById("current-frequency")!;
 const progressText = document.getElementById("progress-text")!;
 const progressBar = document.getElementById("progress-bar")!;
 
+const smoothingSlider = document.getElementById("smoothing-slider") as HTMLInputElement;
+const smoothingValue = document.getElementById("smoothing-value")!;
+
 const test = new HearingTestController({
   rampPower: 10.0,
   rampDuration: 5.0,
   stepTimeout: 5000,
-  frequencies: EXTENDED_TEST_FREQUENCIES
+  mode: "fixed",
+  frequencies: EXTENDED_TEST_FREQUENCIES,
 });
 
-const totalSteps = test.frequencies.length;
-progressText.textContent = `${test.index} / ${totalSteps}`;
+const totalSteps = test.getTotalSteps();
+const progressIndex = test.getIndex();
+progressText.textContent = `${progressIndex} / ${totalSteps}`;
 
 test.nextEventCustomHandler = () => {
   setProgress();
   currentFrequencyText.textContent = `${test.getCurrentFrequency()} Hz`;
 }
 
+const testResults = {
+  left: [] as HearingResult[],
+  right: [] as HearingResult[],
+}
+
 test.testFinishedCustomHandler = () => {
-        // prepare measured points per ear
-        // For frequencies not heard (gain is null), assign a very low gain value (0.001)
-        // which corresponds to severe hearing loss (~60 dB HL)
         const leftMeasured = test.results
-            .filter((r) => r.ear === "left")
-            .map((r) => ({
-                frequency: r.frequency,
-                gain: r.gain || test.maxGain
-            }));
+            .filter((r) => r.ear === "left");
 
         const rightMeasured = test.results
-            .filter((r) => r.ear === "right")
-            .map((r) => ({
-                frequency: r.frequency,
-                gain: r.gain || test.maxGain
-            }));
+            .filter((r) => r.ear === "right");
 
-        updateChartsFromMeasured(leftMeasured, rightMeasured, test.frequencies);
-        
-        // Display hearing summaries
-        const leftSummary = calculateHearingSummary(leftMeasured);
-        const rightSummary = calculateHearingSummary(rightMeasured);
-        
-        const resultSection = document.getElementById("result-summary");
-        if (resultSection) {
-          resultSection.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-              <div style="padding: 1rem; background: rgba(37,99,235,0.05); border-radius: 8px;">
-                <h3 style="margin: 0 0 0.5rem 0; color: #1e40af;">Left Ear</h3>
-                <p style="margin: 0 0 0.5rem 0; font-weight: bold; font-size: 1.125rem;">${leftSummary.category}</p>
-                <p style="margin: 0; color: #666; font-size: 0.875rem;">${leftSummary.description}</p>
-              </div>
-              <div style="padding: 1rem; background: rgba(37,99,235,0.05); border-radius: 8px;">
-                <h3 style="margin: 0 0 0.5rem 0; color: #1e40af;">Right Ear</h3>
-                <p style="margin: 0 0 0.5rem 0; font-weight: bold; font-size: 1.125rem;">${rightSummary.category}</p>
-                <p style="margin: 0; color: #666; font-size: 0.875rem;">${rightSummary.description}</p>
-              </div>
-            </div>
-          `;
-        }
-        
+        if (leftMeasured.length > 0) testResults.left = leftMeasured;
+        if (rightMeasured.length > 0) testResults.right = rightMeasured;
+
+        const smoothing = parseInt(smoothingSlider.value);
+        updateChartsFromMeasured(testResults.left, testResults.right, test.getFrequencyList(), smoothing);
+
         butonHeardTone.setAttribute("disabled", "true");
         currentFrequencyText.textContent = "— Hz";
 }
 
+// Update smoothing label text based on value
+function updateSmoothingLabel(value: number) {
+    let label = "";
+    if (value === 0) label = "0 (Raw Data)";
+    else if (value <= 3) label = `${value} (Light)`;
+    else if (value <= 7) label = `${value} (Medium)`;
+    else label = `${value} (Heavy)`;
+    smoothingValue.textContent = label;
+}
+
 // initialize charts once DOM is ready
 initCharts("chart-left-canvas", "chart-right-canvas");
+
+// Smoothing slider event listener
+smoothingSlider.addEventListener("input", () => {
+    const smoothing = parseInt(smoothingSlider.value);
+    updateSmoothingLabel(smoothing);
+
+    // Re-render charts if we have results
+    if (testResults.left.length > 0 || testResults.right.length > 0) {
+        updateChartsFromMeasured(testResults.left, testResults.right, test.getFrequencyList(), smoothing);
+    }
+});
+
+// Initialize smoothing label
+updateSmoothingLabel(0);
 
 buttonEarLeft.addEventListener("click", () => {
     buttonEarLeft.classList.add("selected");
@@ -120,7 +126,7 @@ window.addEventListener("keydown", (e: KeyboardEvent) => {
 });
 
 function setProgress() {
-    const currentStep = test.index + 1;
+    const currentStep = test.getIndex() + 1;
     const currentProgress = Math.round((currentStep * 100) / totalSteps);
     progressBar.style.width = `${currentProgress}%`;
     progressText.textContent = `${currentStep} / ${totalSteps}`;

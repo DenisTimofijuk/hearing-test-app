@@ -1,35 +1,30 @@
 import { ToneGenerator } from "./toneGenerator";
 import { DEFAULT_TEST_FREQUENCIES } from "./frequencies";
-import Staircase from "./staircase";
-import type { Ear, HearingTestControllerProps } from "./types";
+import type { Ear, HearingResult, HearingTestControllerProps } from "./types";
 
 export class HearingTestController {
-    generator: ToneGenerator;
-    frequencies: number[];
-    rampDuration: number;
-    maxGain: number;
-    stepTimeout: number;
-    index: number;
-    results: {
-        frequency: number;
-        ear: Ear;
-        heard: boolean;
-        gain: number | null;
-    }[];
-    timeoutId: number | null;
-    ear: Ear;
+    private generator = new ToneGenerator();
+    private frequencies: number[];
+    private rampDuration: number;
+    private maxGain: number;
+    private stepTimeout: number;
+    private rampPower: number;
+
+    private index = 0;
+    private timeoutId: number | null = null;
+
+    ear: Ear = "left";
     mode: "fixed" | "staircase";
-    activeStaircase: Staircase | null;
-    rampPower: number;
+    results: HearingResult[] = [];
+
     constructor({
         frequencies,
         rampDuration = 2,
         maxGain = 0.7,
         stepTimeout = 3500,
-        mode = "fixed",
+        mode = "staircase",
         rampPower = 3.0,
     }: HearingTestControllerProps) {
-        this.generator = new ToneGenerator();
         this.frequencies =
             frequencies && frequencies.length > 0
                 ? frequencies
@@ -38,14 +33,7 @@ export class HearingTestController {
         this.rampDuration = rampDuration;
         this.maxGain = maxGain;
         this.stepTimeout = stepTimeout;
-
         this.mode = mode;
-        this.activeStaircase = null;
-
-        this.index = 0;
-        this.results = [];
-        this.timeoutId = null;
-        this.ear = "left";
         this.rampPower = rampPower;
     }
 
@@ -57,7 +45,6 @@ export class HearingTestController {
         await this.generator.init();
         this.index = 0;
         this.results = [];
-        this.activeStaircase = null;
         this.next();
     }
 
@@ -65,7 +52,7 @@ export class HearingTestController {
         return this.index >= this.frequencies.length;
     }
 
-    next() {
+    private next() {
         if (this.isFinished()) {
             this.finish();
             return;
@@ -73,80 +60,37 @@ export class HearingTestController {
 
         const freq = this.frequencies[this.index];
 
-        let trialGain = this.maxGain;
-        if (this.mode === "staircase") {
-            if (!this.activeStaircase) {
-                this.activeStaircase = new Staircase();
-            }
-            trialGain = this.activeStaircase.getCurrentGain();
-        }
-
         this.generator.start({
             frequency: freq,
             rampIn: this.rampDuration,
-            maxGain: trialGain,
+            maxGain: this.maxGain,
             ear: this.ear,
             rampPower: this.rampPower,
         });
 
         this.nextEventCustomHandler();
 
-        this.timeoutId = setTimeout(() => {
-            this.record(false);
+        this.timeoutId = window.setTimeout(() => {
+            this.record();
         }, this.stepTimeout);
     }
 
     heard() {
-        this.record(true);
+        this.record();
     }
 
-    record(heard: boolean) {
-        !!this.timeoutId && clearTimeout(this.timeoutId);
+    private record() {
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        }
 
         const freq = this.frequencies[this.index];
 
-        if (this.mode === "staircase") {
-            if (!this.activeStaircase) this.activeStaircase = new Staircase();
-
-            const { finished } = this.activeStaircase.recordResponse(heard);
-
-            if (finished) {
-                const estGain = this.activeStaircase.getCurrentGain();
-
-                this.results.push({
-                    frequency: freq,
-                    ear: this.ear,
-                    heard,
-                    gain: estGain,
-                });
-
-                this.generator.stop();
-                this.activeStaircase = null;
-                this.index++;
-                this.next();
-                return;
-            } else {
-                // not finished, record interim trial (but do not advance frequency)
-                this.results.push({
-                    frequency: freq,
-                    ear: this.ear,
-                    heard,
-                    gain: heard ? this.generator.getCurrentGain() : null,
-                });
-
-                this.generator.stop();
-                // replay same frequency with updated gain
-                this.next();
-                return;
-            }
-        }
-
-        // Fixed-mode (single trial per frequency)
         this.results.push({
             frequency: freq,
             ear: this.ear,
-            heard,
-            gain: heard ? this.generator.getCurrentGain() : null,
+            thresholdDb: 20 * Math.log10(this.generator.getCurrentGain()),
         });
 
         this.generator.stop();
@@ -154,7 +98,7 @@ export class HearingTestController {
         this.next();
     }
 
-    finish() {
+    private finish() {
         console.log("Test complete", this.results);
         this.testFinishedCustomHandler();
     }
@@ -163,11 +107,23 @@ export class HearingTestController {
         return this.frequencies[this.index] ?? null;
     }
 
+    getFrequencyList() {
+        return this.frequencies;
+    }
+
     nextEventCustomHandler() {
         console.error("Unhandled event.");
     }
 
     testFinishedCustomHandler() {
         console.error("Unhandled event.");
+    }
+
+    getTotalSteps() {
+        return this.frequencies.length;
+    }
+
+    getIndex() {
+        return this.index;
     }
 }

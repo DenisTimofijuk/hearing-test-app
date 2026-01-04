@@ -8,3 +8,11 @@ export type HearingTestControllerProps = {
     mode?: "fixed" | "staircase";
     rampPower?: number;
 }
+
+export type MeasuredPoint = { frequency: number; gain: number };
+
+export type HearingResult = {
+  frequency: number;
+  ear: Ear;
+  thresholdDb: number;
+};

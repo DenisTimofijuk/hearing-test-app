@@ -114,6 +114,29 @@
                             Results
                         </h2>
 
+                        <!-- Smoothing Control -->
+                        <div class="bg-blue-50 rounded-lg p-4 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <label for="smoothing-slider" class="text-sm font-medium text-gray-700">
+                                    Result Smoothing
+                                </label>
+                                <span id="smoothing-value" class="text-sm font-semibold text-blue-700">
+                                    0 (Raw Data)
+                                </span>
+                            </div>
+                            <input
+                                type="range"
+                                id="smoothing-slider"
+                                min="0"
+                                max="10"
+                                value="0"
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                            />
+                            <p class="text-xs text-gray-600">
+                                Adjust to reduce reaction-time variability. Higher values smooth out small differences while preserving major patterns.
+                            </p>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Left Ear Chart -->
                             <div class="bg-gray-50 rounded-xl p-4">

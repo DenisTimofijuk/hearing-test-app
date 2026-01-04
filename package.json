@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "claude": "claude"
   },
   "devDependencies": {
+    "@anthropic-ai/claude-code": "^2.0.76",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
   },
