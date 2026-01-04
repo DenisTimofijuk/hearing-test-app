@@ -26,14 +26,6 @@ A web-based hearing sensitivity test that measures your hearing thresholds acros
 5. **View results** - Charts show your hearing sensitivity across frequencies
 6. **Compare** - Test both ears and compare the results
 
-## Screenshots
-
-The app features a clean, modern interface with:
-- Ear selection controls
-- Real-time frequency display
-- Progress tracking
-- Interactive result charts with dynamic scaling
-- Comparison summary between ears
 
 ## Quick Start
 
@@ -46,7 +38,7 @@ The app features a clean, modern interface with:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/hearing-test-app.git
+git clone https://github.com/DenisTimofijuk/hearing-test-app.git
 
 # Navigate to the project directory
 cd hearing-test-app
