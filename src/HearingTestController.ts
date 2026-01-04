@@ -9,7 +9,6 @@ export class HearingTestController {
     private maxGain: number;
     private stepTimeout: number;
     private rampPower: number;
-
     private index = 0;
     private timeoutId: number | null = null;
 
@@ -99,7 +98,6 @@ export class HearingTestController {
     }
 
     private finish() {
-        console.log("Test complete", this.results);
         this.testFinishedCustomHandler();
     }
 

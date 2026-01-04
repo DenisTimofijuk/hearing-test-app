@@ -264,7 +264,6 @@ export function updateChartsFromMeasured(
   const zones = createRelativeZones(min, max);
 
   if (leftChart && leftData.length > 0) {
-    console.log("Updating left chart", JSON.stringify(leftData));
     leftChart.data.labels = labels;
     leftChart.data.datasets[0].data = leftData;
     leftChart.options.scales.y.min = min;
@@ -274,7 +273,6 @@ export function updateChartsFromMeasured(
   }
 
   if (rightChart && rightData.length > 0) {
-    console.log("Updating right chart", JSON.stringify(rightData));
     rightChart.data.labels = labels;
     rightChart.data.datasets[0].data = rightData;
     rightChart.options.scales.y.min = min;
