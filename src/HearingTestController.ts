@@ -1,58 +1,63 @@
 import { ToneGenerator } from "./toneGenerator";
-import { DEFAULT_TEST_FREQUENCIES } from "./frequencies";
 import type { Ear, HearingResult, HearingTestControllerProps } from "./types";
 
 export class HearingTestController {
     private generator = new ToneGenerator();
-    private frequencies: number[];
+    private frequencies!: number[];
     private rampDuration: number;
     private maxGain: number;
     private stepTimeout: number;
     private rampPower: number;
     private index = 0;
     private timeoutId: number | null = null;
-
-    ear: Ear = "left";
-    mode: "fixed" | "staircase";
+    private ear: Ear = "left";
     results: HearingResult[] = [];
+    testEnded = false;
 
     constructor({
-        frequencies,
         rampDuration = 2,
         maxGain = 0.7,
         stepTimeout = 3500,
-        mode = "staircase",
         rampPower = 3.0,
     }: HearingTestControllerProps) {
-        this.frequencies =
-            frequencies && frequencies.length > 0
-                ? frequencies
-                : DEFAULT_TEST_FREQUENCIES;
-
         this.rampDuration = rampDuration;
         this.maxGain = maxGain;
         this.stepTimeout = stepTimeout;
-        this.mode = mode;
         this.rampPower = rampPower;
     }
 
-    setEar(ear: Ear) {
-        this.ear = ear;
+    setFrequencies(frequencies: number[]) {
+        this.frequencies = frequencies;
     }
 
     async start() {
+        console.log(`Starting test for ear: ${this.ear}`);
+        this.testEnded = false; 
+        this.ear = "left";       
         await this.generator.init();
         this.index = 0;
         this.results = [];
         this.next();
     }
 
+    private finish() {
+        if (this.ear === "left"){
+            this.ear = "right";
+            this.index = 0;
+            console.log("Switching to right ear.");
+            this.next();
+            return;
+        }
+        this.testFinishedCustomHandler();
+        this.testEnded = true;
+    }
+
     isFinished() {
-        return this.index >= this.frequencies.length;
+        return this.testEnded;
     }
 
     private next() {
-        if (this.isFinished()) {
+        if (this.index >= this.frequencies.length) {
             this.finish();
             return;
         }
@@ -95,10 +100,6 @@ export class HearingTestController {
         this.generator.stop();
         this.index++;
         this.next();
-    }
-
-    private finish() {
-        this.testFinishedCustomHandler();
     }
 
     getCurrentFrequency() {

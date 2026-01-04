@@ -27,7 +27,6 @@ npm run preview
 - Main controller managing the test flow
 - Tracks test progress through frequency list
 - Records user responses as `HearingResult[]`
-- Supports two modes: `"fixed"` (preset frequencies) and `"staircase"` (adaptive, not yet implemented)
 - Key configuration: `rampDuration`, `maxGain`, `stepTimeout`, `rampPower`
 - Custom event handlers: `nextEventCustomHandler` and `testFinishedCustomHandler` must be set by UI code
 
@@ -89,7 +88,6 @@ npm run preview
 - Primary purpose: compare left vs right ear sensitivity for the same person
 - Charts dynamically scale to always show results, regardless of hardware
 - Results cannot be compared between different people or different equipment
-- The `"staircase"` mode is declared but not fully implemented - current implementation uses `"fixed"` mode
 
 ## Key Features for Universal Use
 
