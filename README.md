@@ -4,9 +4,7 @@ A web-based hearing sensitivity test that measures your hearing thresholds acros
 
 ## Demo
 
-**[Try it live on GitHub Pages](https://YOUR_USERNAME.github.io/hearing-test-app/)**
-
-> Replace `YOUR_USERNAME` with your GitHub username after deploying
+**[Try it live on GitHub Pages](https://denistimofijuk.github.io/hearing-test-app/)**
 
 ## Features
 
