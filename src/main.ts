@@ -140,6 +140,7 @@ testRange.addEventListener("change", () => {
             break;
     }
 
+    test.resetIndex();
     updateProgressLable();
 });
 

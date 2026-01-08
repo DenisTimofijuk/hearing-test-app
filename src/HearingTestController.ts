@@ -125,4 +125,8 @@ export class HearingTestController {
     getIndex() {
         return this.index;
     }
+
+    resetIndex() {
+        this.index = 0;
+    }
 }
