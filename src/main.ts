@@ -8,7 +8,6 @@ import {
     EXTENDED_TEST_FREQUENCIES,
 } from "./frequencies";
 
-
 const buttonStartTest = document.getElementById(
     "start-test"
 ) as HTMLButtonElement;
@@ -19,8 +18,19 @@ const testRange = document.getElementById("test-range") as HTMLSelectElement;
 
 const currentFrequencyText = document.getElementById("current-frequency")!;
 
-const progressText = document.getElementById("progress-text")!;
-const progressBar = document.getElementById("progress-bar")!;
+const leftProgressText = document.getElementById(
+    "left-progress-text"
+) as HTMLDivElement;
+const leftProgressBar = document.getElementById(
+    "left-progress-bar"
+) as HTMLDivElement;
+
+const rightProgressText = document.getElementById(
+    "right-progress-text"
+) as HTMLDivElement;
+const rightProgressBar = document.getElementById(
+    "right-progress-bar"
+) as HTMLDivElement;
 
 const smoothingSlider = document.getElementById(
     "smoothing-slider"
@@ -101,16 +111,18 @@ smoothingSlider.addEventListener("input", () => {
 // Initialize smoothing label
 updateSmoothingLabel(0);
 
-
 buttonStartTest.addEventListener("click", () => {
     testRange.setAttribute("disabled", "true");
     buttonStartTest.setAttribute("disabled", "true");
     butonHeardTone.removeAttribute("disabled");
+    leftProgressBar.classList.remove(`w-0`);
+    leftProgressBar.style.width = `0%`;
+    rightProgressBar.classList.remove(`w-0`);
+    rightProgressBar.style.width = `0%`;
     test.start();
 });
 
 butonHeardTone.addEventListener("click", () => {
-    progressBar.classList.remove(`w-0`); //TODO: remove this.
     test.heard();
 });
 
@@ -147,17 +159,24 @@ window.addEventListener("keydown", (e: KeyboardEvent) => {
     e.preventDefault();
     if (test.isFinished()) return;
 
-    progressBar.classList.remove(`w-0`); //TODO: remove this.
     test.heard();
 });
 
 function setProgress() {
     const currentStep = test.getIndex() + 1;
-    const currentProgress = Math.round((currentStep * 100) / test.getTotalSteps());
-    progressBar.style.width = `${currentProgress}%`;
-    progressText.textContent = `${currentStep} / ${test.getTotalSteps()}`;
+    const currentProgress = Math.round(
+        (currentStep * 100) / test.getTotalSteps()
+    );
+    if (test.ear === "left") {
+        leftProgressBar.style.width = `${currentProgress}%`;
+        leftProgressText.textContent = `${currentStep} / ${test.getTotalSteps()}`;
+    } else {
+        rightProgressBar.style.width = `${currentProgress}%`;
+        rightProgressText.textContent = `${currentStep} / ${test.getTotalSteps()}`;
+    }
 }
 
 function updateProgressLable() {
-    progressText.textContent = `${test.getIndex()} / ${test.getTotalSteps()}`;
+    leftProgressText.textContent = `${test.getIndex()} / ${test.getTotalSteps()}`;
+    rightProgressText.textContent = `${test.getIndex()} / ${test.getTotalSteps()}`;
 }

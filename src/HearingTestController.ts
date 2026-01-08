@@ -10,7 +10,7 @@ export class HearingTestController {
     private rampPower: number;
     private index = 0;
     private timeoutId: number | null = null;
-    private ear: Ear = "left";
+    ear: Ear = "left";
     results: HearingResult[] = [];
     testEnded = false;
 

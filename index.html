@@ -31,8 +31,13 @@
                                 >Select test level</span
                             >
                             <div class="flex gap-2">
-                                <select id="test-range" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 cursor-pointer">
-                                    <option value="minimal" selected>Minimal</option>
+                                <select
+                                    id="test-range"
+                                    class="flex-1 px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 cursor-pointer"
+                                >
+                                    <option value="minimal" selected>
+                                        Minimal
+                                    </option>
                                     <option value="medium">Medium</option>
                                     <option value="extended">Extended</option>
                                 </select>
@@ -81,23 +86,45 @@
                             class="px-8 py-4 rounded-xl bg-green-600 text-white text-lg font-medium hover:bg-green-700 disabled:opacity-50"
                             disabled
                         >
-                            I Hear It <br>[space bar]
+                            I Hear It <br />[space bar]
                         </button>
                     </section>
 
-                    <!-- Progress -->
+                    <!-- Progress Left -->
                     <section class="space-y-2">
-                        <div class="flex justify-between text-sm text-gray-500">
-                            <span>Test progress</span>
-                            <span id="progress-text">0 / 0</span>
-                        </div>
-                        <div
-                            class="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
-                        >
-                            <div
-                                id="progress-bar"
-                                class="h-full w-0 bg-blue-600 transition-all"
-                            ></div>
+                        <div class="progress-wrapper">
+                            <div class="w-full">
+                                <div
+                                    class="flex justify-between text-sm text-gray-500"
+                                >
+                                    <span>Progress of <b>left</b> ear test</span>
+                                    <span id="left-progress-text">0 / 0</span>
+                                </div>
+                                <div
+                                    class="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
+                                >
+                                    <div
+                                        id="left-progress-bar"
+                                        class="h-full w-0 bg-blue-600 transition-all"
+                                    ></div>
+                                </div>
+                            </div>
+                            <div class="w-full">
+                                <div
+                                    class="flex justify-between text-sm text-gray-500"
+                                >
+                                    <span>Progress of <b>right</b> ear test</span>
+                                    <span id="right-progress-text">0 / 0</span>
+                                </div>
+                                <div
+                                    class="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
+                                >
+                                    <div
+                                        id="right-progress-bar"
+                                        class="h-full w-0 bg-blue-600 transition-all"
+                                    ></div>
+                                </div>
+                            </div>
                         </div>
                     </section>
 
@@ -110,10 +137,16 @@
                         <!-- Smoothing Control -->
                         <div class="bg-blue-50 rounded-lg p-4 space-y-3">
                             <div class="flex justify-between items-center">
-                                <label for="smoothing-slider" class="text-sm font-medium text-gray-700">
+                                <label
+                                    for="smoothing-slider"
+                                    class="text-sm font-medium text-gray-700"
+                                >
                                     Result Smoothing
                                 </label>
-                                <span id="smoothing-value" class="text-sm font-semibold text-blue-700">
+                                <span
+                                    id="smoothing-value"
+                                    class="text-sm font-semibold text-blue-700"
+                                >
                                     0 (Raw Data)
                                 </span>
                             </div>
@@ -126,7 +159,9 @@
                                 class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                             />
                             <p class="text-xs text-gray-600">
-                                Adjust to reduce reaction-time variability. Higher values smooth out small differences while preserving major patterns.
+                                Adjust to reduce reaction-time variability.
+                                Higher values smooth out small differences while
+                                preserving major patterns.
                             </p>
                         </div>
 
@@ -140,7 +175,10 @@
                                     id="chart-left"
                                     class="h-64 flex items-center justify-center text-gray-400 text-sm border border-dashed rounded-lg"
                                 >
-                                    <canvas id="chart-left-canvas" class="w-full h-full"></canvas>
+                                    <canvas
+                                        id="chart-left-canvas"
+                                        class="w-full h-full"
+                                    ></canvas>
                                 </div>
                             </div>
 
@@ -153,7 +191,10 @@
                                     id="chart-right"
                                     class="h-64 flex items-center justify-center text-gray-400 text-sm border border-dashed rounded-lg"
                                 >
-                                    <canvas id="chart-right-canvas" class="w-full h-full"></canvas>
+                                    <canvas
+                                        id="chart-right-canvas"
+                                        class="w-full h-full"
+                                    ></canvas>
                                 </div>
                             </div>
                         </div>
@@ -183,9 +224,7 @@
                             <h4 class="font-semibold text-gray-700 mb-2">
                                 How to use
                             </h4>
-                            <ul
-                                class="space-y-1 text-gray-600"
-                            >
+                            <ul class="space-y-1 text-gray-600">
                                 <li>
                                     • Use <strong>headphones</strong> (strongly
                                     recommended)
@@ -210,9 +249,7 @@
                             <h4 class="font-semibold text-gray-700 mb-2">
                                 Important disclaimer
                             </h4>
-                            <ul
-                                class="space-y-1 text-gray-600"
-                            >
+                            <ul class="space-y-1 text-gray-600">
                                 <li>
                                     • This is
                                     <strong
